@@ -668,7 +668,11 @@ pub fn init(cx: &mut App) {
         KeyBinding::new("cmd-backspace", DeleteToLineStart, palette),
     ];
     for prefix in ["ctrl", "alt"] {
-        palette_bindings.push(KeyBinding::new(&format!("{prefix}-left"), WordLeft, palette));
+        palette_bindings.push(KeyBinding::new(
+            &format!("{prefix}-left"),
+            WordLeft,
+            palette,
+        ));
         palette_bindings.push(KeyBinding::new(
             &format!("{prefix}-right"),
             WordRight,
@@ -691,11 +695,7 @@ pub fn init(cx: &mut App) {
         palette_bindings.push(KeyBinding::new(&format!("{prefix}-x"), Cut, palette));
         palette_bindings.push(KeyBinding::new(&format!("{prefix}-v"), Paste, palette));
         palette_bindings.push(KeyBinding::new(&format!("{prefix}-z"), Undo, palette));
-        palette_bindings.push(KeyBinding::new(
-            &format!("shift-{prefix}-z"),
-            Redo,
-            palette,
-        ));
+        palette_bindings.push(KeyBinding::new(&format!("shift-{prefix}-z"), Redo, palette));
     }
     cx.bind_keys(palette_bindings);
     cx.bind_keys(bindings);
@@ -1185,7 +1185,12 @@ impl ComposerInput {
         self.replace_text_in_range(None, "", window, cx);
     }
 
-    fn delete_word_left(&mut self, _: &DeleteWordLeft, window: &mut Window, cx: &mut Context<Self>) {
+    fn delete_word_left(
+        &mut self,
+        _: &DeleteWordLeft,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
         let prev = self.previous_word_boundary(self.cursor_offset());
         self.delete_to(prev, window, cx);
     }
