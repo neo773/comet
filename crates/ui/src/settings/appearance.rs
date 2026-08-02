@@ -23,9 +23,18 @@ impl AppearancePage {
     }
 }
 
-/// One placeholder bar in the miniature.
-fn bar(width: f32, tone: Hsla) -> gpui::Div {
-    div().h(px(5.0)).w(px(width)).rounded(px(3.0)).bg(tone)
+/// One placeholder bar in the miniature, width given as a fraction of its
+/// container.
+///
+/// Relative rather than fixed px because the System card renders this same
+/// miniature into *half* a card. Fixed widths were wider than the squeezed
+/// content pane and spilled out over the card edge.
+fn bar(fraction: f32, tone: Hsla) -> gpui::Div {
+    div()
+        .h(px(5.0))
+        .w(gpui::relative(fraction))
+        .rounded(px(3.0))
+        .bg(tone)
 }
 
 /// Which corners a miniature rounds — the split card needs each half to round
@@ -66,15 +75,16 @@ fn miniature(theme: &Theme, corners: Corners) -> AnyElement {
                 .w(px(44.0))
                 .h_full()
                 .flex_none()
+                .overflow_hidden()
                 .flex()
                 .flex_col()
                 .gap(px(7.0))
                 .px(px(8.0))
                 .pt(px(14.0))
-                .child(bar(20.0, strong))
-                .child(bar(28.0, line))
-                .child(bar(24.0, line))
-                .child(bar(28.0, line)),
+                .child(bar(0.70, strong))
+                .child(bar(1.0, line))
+                .child(bar(0.85, line))
+                .child(bar(1.0, line)),
         )
         .child(
             // Inset content card — the same rounded plate the real shell floats.
@@ -87,14 +97,15 @@ fn miniature(theme: &Theme, corners: Corners) -> AnyElement {
                 .border_1()
                 .border_color(theme.border)
                 .bg(theme.bg)
+                .overflow_hidden()
                 .flex()
                 .flex_col()
                 .gap(px(7.0))
                 .p(px(10.0))
-                .child(bar(52.0, strong))
-                .child(bar(70.0, line))
-                .child(bar(62.0, line))
-                .child(bar(44.0, line)),
+                .child(bar(0.62, strong))
+                .child(bar(0.88, line))
+                .child(bar(0.76, line))
+                .child(bar(0.52, line)),
         )
         .into_any_element()
 }
