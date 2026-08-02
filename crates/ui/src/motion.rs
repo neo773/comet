@@ -811,7 +811,7 @@ mod tests {
 
         // Transparent → wash: alpha ramps, hue stays the wash's (premultiplied
         // — never a darkened grey mid-fade).
-        let wash = crate::theme::white_alpha(0.06);
+        let wash = crate::theme::ink(0.06);
         let half = mix(gpui::transparent_black(), wash, 0.5);
         assert!((half.a - 0.03).abs() < 1e-4, "alpha midpoint {}", half.a);
         let half_rgba = Rgba::from(half);

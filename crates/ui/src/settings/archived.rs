@@ -119,7 +119,7 @@ impl Render for ArchivedPage {
                     .rounded(px(8.0))
                     .px(px(12.0))
                     .py(px(8.0))
-                    .hover(|s| s.bg(crate::theme::white_alpha(0.03)))
+                    .hover(|s| s.bg(crate::theme::ink(0.03)))
                     .on_hover(cx.listener(move |this, hovered: &bool, _, cx| {
                         if *hovered {
                             this.hovered = Some(ix);
@@ -220,8 +220,8 @@ impl Render for ArchivedPage {
                             .when(is_busy, |el| el.opacity(0.4))
                             .cursor_pointer()
                             .hover(|s| {
-                                s.bg(crate::theme::oklch(0.235, 0.0, 0.0))
-                                    .text_color(Theme::dark().text)
+                                s.bg(theme.surface_raised)
+                                    .text_color(theme.text)
                             })
                             .on_click(cx.listener(move |this, _, _, cx| {
                                 this.unarchive(chat_id.clone(), cx);
@@ -300,7 +300,7 @@ impl Render for ArchivedPage {
                     ))
                     .when_some(self.error.clone(), |el, message| {
                         el.child(
-                            widgets::error_strip(message)
+                            widgets::error_strip(&theme, message)
                                 .id("archived-error")
                                 .cursor_pointer()
                                 .on_click(cx.listener(|this, _, _, cx| {
