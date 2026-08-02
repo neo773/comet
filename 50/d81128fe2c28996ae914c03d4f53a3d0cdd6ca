@@ -1,0 +1,21 @@
+crates/ui/src/settings/appearance.rs
+  s_50b26febf73a5e::t_574689a07a6577 78,84-87
+  s_50b26febf73a5e::t_0a3d188407adbb 100,105-108
+  s_50b26febf73a5e::t_4d387a7e6897fb 26-37
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.20",
+  "base_commit_sha": "50d81128fe2c28996ae914c03d4f53a3d0cdd6ca",
+  "prompts": {},
+  "sessions": {
+    "s_50b26febf73a5e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "044be0dc-6b19-4566-8480-99a2bf127b52",
+        "model": "claude-opus-5"
+      },
+      "human_author": "neo773 <62795688+neo773@users.noreply.github.com>"
+    }
+  }
+}
