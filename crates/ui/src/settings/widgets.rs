@@ -71,12 +71,7 @@ pub fn field_label(theme: &Theme, label: impl Into<SharedString>) -> gpui::Div {
 /// control works for a density picker, a layout picker or anything else where
 /// the choice is easier to show than to describe. Pair with [`option_card`].
 pub fn option_card_row() -> gpui::Div {
-    div()
-        .flex()
-        .flex_row()
-        .items_start()
-        .gap(px(16.0))
-        .w_full()
+    div().flex().flex_row().items_start().gap(px(16.0)).w_full()
 }
 
 /// Default height of an [`option_card`] preview frame.
@@ -148,7 +143,11 @@ pub fn option_card(
         .child(
             div()
                 .text_size(px(13.0))
-                .text_color(if selected { theme.text } else { theme.text_muted })
+                .text_color(if selected {
+                    theme.text
+                } else {
+                    theme.text_muted
+                })
                 .child(label.into()),
         )
 }

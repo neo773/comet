@@ -9,7 +9,9 @@
 //! Stateless. The choice lives in the [`crate::appearance`] globals, and
 //! `set_mode` repaints every window, so this page has nothing of its own to hold.
 
-use gpui::{AnyElement, Context, Hsla, IntoElement, Render, SharedString, Window, div, prelude::*, px};
+use gpui::{
+    AnyElement, Context, Hsla, IntoElement, Render, SharedString, Window, div, prelude::*, px,
+};
 
 use crate::appearance::{self, AppearanceMode};
 use crate::settings::widgets;
@@ -58,56 +60,51 @@ fn miniature(theme: &Theme, corners: Corners) -> AnyElement {
     let line = theme.text.opacity(0.22);
     let strong = theme.text.opacity(0.34);
     let r = px(widgets::OPTION_CARD_RADIUS);
-    let root = div()
-        .size_full()
-        .flex()
-        .flex_row()
-        .bg(theme.surface);
+    let root = div().size_full().flex().flex_row().bg(theme.surface);
     let root = match corners {
         Corners::All => root.rounded(r),
         Corners::Left => root.rounded_tl(r).rounded_bl(r),
         Corners::Right => root.rounded_tr(r).rounded_br(r),
     };
-    root
-        .child(
-            // Sidebar strip.
-            div()
-                .w(px(44.0))
-                .h_full()
-                .flex_none()
-                .overflow_hidden()
-                .flex()
-                .flex_col()
-                .gap(px(7.0))
-                .px(px(8.0))
-                .pt(px(14.0))
-                .child(bar(0.70, strong))
-                .child(bar(1.0, line))
-                .child(bar(0.85, line))
-                .child(bar(1.0, line)),
-        )
-        .child(
-            // Inset content card — the same rounded plate the real shell floats.
-            div()
-                .flex_1()
-                .min_w_0()
-                .my(px(8.0))
-                .mr(px(8.0))
-                .rounded(px(6.0))
-                .border_1()
-                .border_color(theme.border)
-                .bg(theme.bg)
-                .overflow_hidden()
-                .flex()
-                .flex_col()
-                .gap(px(7.0))
-                .p(px(10.0))
-                .child(bar(0.62, strong))
-                .child(bar(0.88, line))
-                .child(bar(0.76, line))
-                .child(bar(0.52, line)),
-        )
-        .into_any_element()
+    root.child(
+        // Sidebar strip.
+        div()
+            .w(px(44.0))
+            .h_full()
+            .flex_none()
+            .overflow_hidden()
+            .flex()
+            .flex_col()
+            .gap(px(7.0))
+            .px(px(8.0))
+            .pt(px(14.0))
+            .child(bar(0.70, strong))
+            .child(bar(1.0, line))
+            .child(bar(0.85, line))
+            .child(bar(1.0, line)),
+    )
+    .child(
+        // Inset content card — the same rounded plate the real shell floats.
+        div()
+            .flex_1()
+            .min_w_0()
+            .my(px(8.0))
+            .mr(px(8.0))
+            .rounded(px(6.0))
+            .border_1()
+            .border_color(theme.border)
+            .bg(theme.bg)
+            .overflow_hidden()
+            .flex()
+            .flex_col()
+            .gap(px(7.0))
+            .p(px(10.0))
+            .child(bar(0.62, strong))
+            .child(bar(0.88, line))
+            .child(bar(0.76, line))
+            .child(bar(0.52, line)),
+    )
+    .into_any_element()
 }
 
 /// The System card: light on the left, dark on the right. Each half is a

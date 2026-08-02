@@ -310,9 +310,7 @@ impl AccountsPage {
                 } else {
                     gpui::transparent_black()
                 })
-                .when(!open, |el| {
-                    el.hover(|s| s.bg(crate::theme::ink(0.04)))
-                })
+                .when(!open, |el| el.hover(|s| s.bg(crate::theme::ink(0.04))))
                 .on_click(cx.listener(|this, _, _, cx| {
                     let just_dismissed = this
                         .device_menu_dismissed_at
@@ -801,10 +799,7 @@ impl AccountsPage {
                         .text_color(theme.text_muted)
                         .cursor_pointer()
                         .when(is_busy, |el| el.opacity(0.5))
-                        .hover(|s| {
-                            s.bg(crate::theme::ink(0.06))
-                                .text_color(theme.text)
-                        })
+                        .hover(|s| s.bg(crate::theme::ink(0.06)).text_color(theme.text))
                         .on_click(cx.listener(move |this, _, _, cx| {
                             this.account_action(methods::FORGET_AGENT_ACCOUNT, &forget_account, cx);
                         }))
@@ -1348,9 +1343,11 @@ impl Render for AccountsPage {
                                             .child(SharedString::from("Add account")),
                                     ),
                             )
-                            .children(warnings.into_iter().map(|warning| {
-                                widgets::warning_strip(&theme, warning)
-                            }))
+                            .children(
+                                warnings
+                                    .into_iter()
+                                    .map(|warning| widgets::warning_strip(&theme, warning)),
+                            )
                             .child(card)
                             .into_any_element()
                     })

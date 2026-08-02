@@ -219,10 +219,7 @@ impl Render for ArchivedPage {
                             .opacity(if row_hovered || is_busy { 1.0 } else { 0.0 })
                             .when(is_busy, |el| el.opacity(0.4))
                             .cursor_pointer()
-                            .hover(|s| {
-                                s.bg(theme.surface_raised)
-                                    .text_color(theme.text)
-                            })
+                            .hover(|s| s.bg(theme.surface_raised).text_color(theme.text))
                             .on_click(cx.listener(move |this, _, _, cx| {
                                 this.unarchive(chat_id.clone(), cx);
                             }))

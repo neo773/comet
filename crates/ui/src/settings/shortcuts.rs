@@ -287,8 +287,7 @@ impl Render for ShortcutsPage {
                                     .when(disabled, |el| el.opacity(0.35))
                                     .when(!disabled, |el| {
                                         el.hover(|s| {
-                                            s.bg(crate::theme::ink(0.04))
-                                                .text_color(theme.text)
+                                            s.bg(crate::theme::ink(0.04)).text_color(theme.text)
                                         })
                                         .on_click(
                                             cx.listener(|this, _, _, cx| {

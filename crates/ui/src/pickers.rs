@@ -1930,8 +1930,7 @@ impl Pickers {
                             })
                             .when(is_disabled, |el| el.opacity(0.35))
                             .when(!is_disabled, |el| {
-                                el.cursor_pointer()
-                                    .hover(|s| s.bg(crate::theme::ink(0.06)))
+                                el.cursor_pointer().hover(|s| s.bg(crate::theme::ink(0.06)))
                             })
                             .on_click(cx.listener(move |this, _, _, cx| {
                                 this.pick_harness(harness, cx);

@@ -334,7 +334,11 @@ pub fn menu_row(theme: &Theme, active: bool, fade_key: impl Into<SharedString>) 
     } else {
         let fade_key = fade_key.into();
         let mut row = row
-            .text_color(motion::hover_blend(&fade_key, theme.text.opacity(0.9), theme.text))
+            .text_color(motion::hover_blend(
+                &fade_key,
+                theme.text.opacity(0.9),
+                theme.text,
+            ))
             .bg(motion::hover_blend(
                 &fade_key,
                 crate::theme::wash(0.0),
@@ -401,11 +405,7 @@ pub fn tracked_upper(label: &str) -> String {
 pub fn menu_separator() -> gpui::Div {
     // Full-bleed: negative margins cancel the card's p-1 inset so the hairline
     // runs border to border (user request).
-    div()
-        .h(px(1.0))
-        .mx(px(-4.0))
-        .my(px(4.0))
-        .bg(hairline(0.07))
+    div().h(px(1.0)).mx(px(-4.0)).my(px(4.0)).bg(hairline(0.07))
 }
 
 /// The trailing check on the selected row (comet `MenuCheck`): 14px,

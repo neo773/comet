@@ -463,7 +463,12 @@ fn render_table(
                 TableAlign::Right => cell.text_right(),
             };
             if let Some(flat) = cell_flat {
-                cell = cell.child(flat_text_element(flat, table_cell_ix(ix, r, c), opts, theme));
+                cell = cell.child(flat_text_element(
+                    flat,
+                    table_cell_ix(ix, r, c),
+                    opts,
+                    theme,
+                ));
             }
             row_el = row_el.child(cell);
         }
@@ -633,7 +638,12 @@ fn flatten_cached(
 }
 
 /// Veiled, clickable text for a flattened block (no sizing wrapper).
-fn flat_text_element(flat: &FlatText, ix: usize, opts: &RenderOptions, theme: &Theme) -> AnyElement {
+fn flat_text_element(
+    flat: &FlatText,
+    ix: usize,
+    opts: &RenderOptions,
+    theme: &Theme,
+) -> AnyElement {
     // Streaming veil: opacity-only recolor of the runs covering newly appended
     // chunks. Same text, same fonts, same lengths — layout is untouched.
     // Settled elements return no spans and reuse the cached runs unsplit.
@@ -1114,7 +1124,7 @@ pub fn token_color(class: TokenClass, theme: &Theme) -> Hsla {
     match class {
         TokenClass::Keyword => theme.syntax_keyword, // soft rose
         TokenClass::StringLit => theme.syntax_string, // soft green
-        TokenClass::Number => theme.syntax_number,    // soft amber
+        TokenClass::Number => theme.syntax_number,   // soft amber
         TokenClass::Comment => theme.text_faint,
     }
 }

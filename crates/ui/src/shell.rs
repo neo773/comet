@@ -32,9 +32,9 @@ use crate::motion::{self, AnimationExt as _, MotionSpec, RESIZE, SPLASH_OUT};
 use crate::popover::{self, Loadable};
 use crate::rail;
 use crate::settings::accounts::AccountsPage;
+use crate::settings::appearance::AppearancePage;
 use crate::settings::archived::ArchivedPage;
 use crate::settings::devices::DevicesPage;
-use crate::settings::appearance::AppearancePage;
 use crate::settings::shortcuts::{ShortcutsEvent, ShortcutsPage};
 use crate::settings::{
     KeymapConfig, RIGHT_PANE_DEFAULT, RIGHT_PANE_MAX, RIGHT_PANE_MIN, SAVE_DEBOUNCE_MS,
@@ -1702,10 +1702,7 @@ impl Shell {
                                     theme.text_muted
                                 })
                                 .cursor_pointer()
-                                .hover(|s| {
-                                    s.bg(crate::theme::wash(0.11))
-                                        .text_color(theme.text)
-                                })
+                                .hover(|s| s.bg(crate::theme::wash(0.11)).text_color(theme.text))
                                 .on_click(
                                     cx.listener(move |this, _, _, cx| this.open_settings(item, cx)),
                                 )
@@ -1733,10 +1730,7 @@ impl Shell {
                         .text_size(px(13.0))
                         .text_color(theme.text_muted)
                         .cursor_pointer()
-                        .hover(|s| {
-                            s.bg(crate::theme::wash(0.11))
-                                .text_color(theme.text)
-                        })
+                        .hover(|s| s.bg(crate::theme::wash(0.11)).text_color(theme.text))
                         .on_click(cx.listener(|this, _, _, cx| this.close_settings(cx)))
                         .child(
                             // AltArrowLeft chevron (comet settings-sidebar.tsx),
