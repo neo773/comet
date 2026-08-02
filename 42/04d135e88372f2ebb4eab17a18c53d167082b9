@@ -1,0 +1,29 @@
+crates/ui/src/composer.rs
+  s_a38ed956302097::t_c200bf4adee0a8 1136-1141,1148-1151
+  s_a38ed956302097::t_8a88e3825336df 2164-2169
+crates/ui/src/shell.rs
+  s_a38ed956302097::t_a7077f1d14a965 557-560
+  s_a38ed956302097::t_b3a0f078ba6b1a 114
+  s_a38ed956302097::t_d67c31440c44cf 3595-3602
+  s_a38ed956302097::t_d8b9fcb4eb29b5 3692-3735
+crates/ui/src/rail.rs
+  s_a38ed956302097::t_1c5289bd61ba42 10,221,233-247,249,401
+crates/ui/src/transcript.rs
+  s_a38ed956302097::t_8bbe08445adb12 33-36,84-192,215-222,1015-1031,1091-1098,1147-1154,1180-1182,1239-1241,1257-1746,1797-1819,1863,2860-2879,2889-2911
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.19",
+  "base_commit_sha": "4204d135e88372f2ebb4eab17a18c53d167082b9",
+  "prompts": {},
+  "sessions": {
+    "s_a38ed956302097": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "63529e5e-ca5d-4f96-85c3-2b294a48dff7",
+        "model": "claude-fable-5"
+      },
+      "human_author": "neo773 <62795688+neo773@users.noreply.github.com>"
+    }
+  }
+}
