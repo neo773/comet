@@ -96,6 +96,17 @@ pub fn theme_generation() -> u32 {
     THEME_GENERATION.load(Ordering::Relaxed)
 }
 
+/// [`CURRENT_APPEARANCE`] is process-wide, so under the parallel test runner
+/// any test that flips it — or asserts on the output of a helper that reads it
+/// ([`ink`], [`hairline`], [`wash`], …) — must hold this lock. Crate-visible
+/// because such tests exist outside this module too (see `motion::tests`).
+/// Tests that flip the appearance restore Dark before releasing the guard.
+#[cfg(test)]
+pub(crate) fn lock_appearance() -> std::sync::MutexGuard<'static, ()> {
+    static APPEARANCE_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+    APPEARANCE_LOCK.lock().unwrap_or_else(|e| e.into_inner())
+}
+
 /// Point the context-free paint helpers at an appearance. Called by
 /// [`Theme::install`]; exposed for tests that build a theme without an `App`.
 pub fn set_current_appearance(appearance: Appearance) {
@@ -382,17 +393,17 @@ impl Theme {
             text_muted: neutral(0.708), // ~neutral-400
             text_faint: neutral(0.556), // ~neutral-500
             text_dim: grey(0x98),
-            solid: neutral(0.922),      // near-white plate
-            on_solid: grey(0x0e),       // near-black label
-            accent: oklch(0.673, 0.182, 276.935), // indigo-400
+            solid: neutral(0.922),                       // near-white plate
+            on_solid: grey(0x0e),                        // near-black label
+            accent: oklch(0.673, 0.182, 276.935),        // indigo-400
             accent_strong: oklch(0.585, 0.233, 277.117), // indigo-500
             on_accent: neutral(0.985),
-            danger: oklch(0.704, 0.191, 22.216), // red-400
+            danger: oklch(0.704, 0.191, 22.216),       // red-400
             danger_muted: oklch(0.808, 0.114, 19.571), // red-300
-            warning: oklch(0.828, 0.189, 84.429), // amber-400
+            warning: oklch(0.828, 0.189, 84.429),      // amber-400
             warning_muted: oklch(0.924, 0.12, 95.746), // amber-200
-            success: oklch(0.765, 0.177, 163.223), // emerald-400
-            busy: oklch(0.718, 0.202, 349.761),  // pink-400
+            success: oklch(0.765, 0.177, 163.223),     // emerald-400
+            busy: oklch(0.718, 0.202, 349.761),        // pink-400
             success_muted: oklch(0.845, 0.143, 164.978), // emerald-300
             surface_raised_hover: neutral(0.29),
             band: band_for(Appearance::Dark),
@@ -405,9 +416,9 @@ impl Theme {
             code_wash: oklch(0.702, 0.183, 293.541).opacity(0.12), // violet-400/12
             syntax_keyword: oklch(0.709, 0.129, 20.0), // soft rose
             syntax_string: oklch(0.77, 0.11, 168.0), // soft green
-            syntax_number: oklch(0.78, 0.12, 80.0), // soft amber
-            diff_add: oklch(0.765, 0.177, 163.223), // emerald-400
-            diff_del: oklch(0.704, 0.191, 22.216), // red-400
+            syntax_number: oklch(0.78, 0.12, 80.0),  // soft amber
+            diff_add: oklch(0.765, 0.177, 163.223),  // emerald-400
+            diff_del: oklch(0.704, 0.191, 22.216),   // red-400
             diff_hunk_bg: hsla(0.6, 0.35, 0.6, 0.05),
             font_sans: "Geist".into(),
             font_mono: "Geist Mono".into(),
@@ -427,7 +438,7 @@ impl Theme {
     pub fn light() -> Self {
         Self {
             appearance: Appearance::Light,
-            bg: grey(0xff),           // main panel — clean white
+            bg: grey(0xff), // main panel — clean white
             // Deeper than ~neutral-100 looks on paper: the content card is pure
             // white and sits *inside* this surface, so too small a step leaves the
             // whole window one flat sheet with a hairline drawn on it.
@@ -456,17 +467,17 @@ impl Theme {
             // too, not just on the white content plane.
             text_faint: neutral(0.535),
             text_dim: neutral(0.50),
-            solid: neutral(0.205),      // near-black plate, deeper than body text
-            on_solid: neutral(0.985),   // near-white label
+            solid: neutral(0.205),    // near-black plate, deeper than body text
+            on_solid: neutral(0.985), // near-white label
             accent: oklch(0.511, 0.262, 276.966), // indigo-600
             accent_strong: oklch(0.511, 0.262, 276.966), // indigo-600 fill
             on_accent: neutral(0.985),
-            danger: oklch(0.577, 0.245, 27.325), // red-600
-            danger_muted: oklch(0.505, 0.213, 27.518), // red-700
-            warning: oklch(0.555, 0.163, 48.998), // amber-700 — carries 12px text
+            danger: oklch(0.577, 0.245, 27.325),        // red-600
+            danger_muted: oklch(0.505, 0.213, 27.518),  // red-700
+            warning: oklch(0.555, 0.163, 48.998),       // amber-700 — carries 12px text
             warning_muted: oklch(0.473, 0.137, 46.201), // amber-800
-            success: oklch(0.596, 0.145, 163.225), // emerald-600
-            busy: oklch(0.592, 0.249, 0.584),    // pink-600
+            success: oklch(0.596, 0.145, 163.225),      // emerald-600
+            busy: oklch(0.592, 0.249, 0.584),           // pink-600
             success_muted: oklch(0.508, 0.118, 165.612), // emerald-700
             // Opaque pills darken on hover here rather than brighten — same
             // "brighten the plate, don't wash it out" rule, read the other way.
@@ -485,7 +496,7 @@ impl Theme {
             syntax_string: oklch(0.46, 0.11, 168.0),
             syntax_number: oklch(0.52, 0.13, 70.0),
             diff_add: oklch(0.596, 0.145, 163.225), // emerald-600
-            diff_del: oklch(0.577, 0.245, 27.325), // red-600
+            diff_del: oklch(0.577, 0.245, 27.325),  // red-600
             diff_hunk_bg: hsla(0.6, 0.35, 0.35, 0.07),
             font_sans: "Geist".into(),
             font_mono: "Geist Mono".into(),
@@ -827,15 +838,6 @@ pub fn mix(a: Hsla, b: Hsla, t: f32) -> Hsla {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    /// [`CURRENT_APPEARANCE`] is process-wide, so the tests that flip it would
-    /// race each other under the default parallel test runner. They take this
-    /// lock and restore Dark on the way out.
-    static APPEARANCE_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
-
-    fn lock_appearance() -> std::sync::MutexGuard<'static, ()> {
-        APPEARANCE_LOCK.lock().unwrap_or_else(|e| e.into_inner())
-    }
 
     fn srgb_u8(c: [f32; 3]) -> [u8; 3] {
         [

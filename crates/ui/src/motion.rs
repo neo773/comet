@@ -810,7 +810,10 @@ mod tests {
         assert!(mid.l > rest.l && mid.l < hover.l, "mid lightness {}", mid.l);
 
         // Transparent → wash: alpha ramps, hue stays the wash's (premultiplied
-        // — never a darkened grey mid-fade).
+        // — never a darkened grey mid-fade). `ink` reads the process-wide
+        // appearance, which theme's tests flip — hold the lock so this test
+        // never observes a mid-flip Light palette.
+        let _guard = crate::theme::lock_appearance();
         let wash = crate::theme::ink(0.06);
         let half = mix(gpui::transparent_black(), wash, 0.5);
         assert!((half.a - 0.03).abs() < 1e-4, "alpha midpoint {}", half.a);
