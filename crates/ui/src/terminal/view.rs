@@ -60,6 +60,29 @@ pub fn terminal_bg() -> Hsla {
     terminal_bg_for(current_appearance())
 }
 
+/// Selection wash over the grid.
+///
+/// Deliberately *achromatic*, which is where this differs from
+/// [`Theme::selection`] — the composer's blue. A saturated wash sits on top of
+/// sixteen ANSI hues and drags every one of them toward itself: red text under
+/// blue reads purple, green reads teal. A neutral veil changes lightness only,
+/// so selected output keeps the colors the program asked for — the whole point
+/// of tuning those palettes per appearance in the first place.
+///
+/// White on dark, black on light, the same direction [`crate::theme::ink`]
+/// takes. The alpha is heavier than a hover wash because this has to read as a
+/// deliberate highlight at a glance, and lighter than a plate because the
+/// glyphs underneath still have to be legible through it.
+pub fn terminal_selection_for(appearance: Appearance) -> Hsla {
+    match appearance {
+        Appearance::Dark => gpui::hsla(0.0, 0.0, 1.0, 0.22),
+        // Slightly heavier: an equal alpha of black on near-white reads fainter
+        // than white on near-black, because the surround is brighter to begin
+        // with.
+        Appearance::Light => gpui::hsla(0.0, 0.0, 0.0, 0.16),
+    }
+}
+
 /// The 16 ANSI colors tuned for the near-black background (indexes 0-7 normal,
 /// 8-15 bright).
 const ANSI16_DARK: [(u8, u8, u8); 16] = [
@@ -545,7 +568,7 @@ impl gpui::Element for TerminalElement {
                                 point(origin.x + cell_w * start as f32, y),
                                 size(cell_w * (col - start) as f32, line_h),
                             ),
-                            theme.selection,
+                            terminal_selection_for(theme.appearance),
                         ));
                         sel_start = None;
                     }
@@ -1119,5 +1142,22 @@ mod tests {
     #[test]
     fn drag_threshold_matches_the_gpui_default() {
         assert_eq!(SELECTION_DRAG_THRESHOLD, 2.0);
+    }
+
+    /// The selection veil must stay achromatic, or it tints the ANSI text it
+    /// covers instead of just lifting it.
+    #[test]
+    fn selection_wash_is_neutral_and_translucent() {
+        for appearance in [Appearance::Dark, Appearance::Light] {
+            let wash = terminal_selection_for(appearance);
+            assert_eq!(wash.s, 0.0, "{appearance:?} selection must have no hue");
+            assert!(
+                wash.a > 0.0 && wash.a < 0.5,
+                "{appearance:?} selection must veil the cell, not replace it"
+            );
+        }
+        // Opposite directions: lighten the dark grid, darken the light one.
+        assert_eq!(terminal_selection_for(Appearance::Dark).l, 1.0);
+        assert_eq!(terminal_selection_for(Appearance::Light).l, 0.0);
     }
 }
