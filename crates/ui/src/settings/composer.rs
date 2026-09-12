@@ -5,8 +5,9 @@
 //! is saved debounced from its own boot-time copy, so the composer keeps its
 //! own file rather than racing it): last harness, last model per harness
 //! (id + label, so the chip names the pick before the model list loads),
-//! and last reasoning level. Written synchronously on every pick (picks are
-//! rare); corrupt or missing files fall back to defaults.
+//! last reasoning level, and last model option picks per harness. Written
+//! synchronously on every pick (picks are rare); corrupt or missing files fall
+//! back to defaults.
 
 use std::collections::HashMap;
 use std::io::{self, Write};
@@ -46,6 +47,9 @@ pub struct ComposerDefaults {
     pub model_by_harness: HashMap<HarnessId, RememberedModel>,
     /// Last reasoning level picked (global, like zeron's `reasoning` key).
     pub reasoning: Option<ReasoningLevel>,
+    /// Last non-default model option picks (option id → choice id), per
+    /// harness — option ids ("contextWindow", "fastMode") are harness-scoped.
+    pub model_options_by_harness: HashMap<HarnessId, serde_json::Map<String, serde_json::Value>>,
     /// Every model label ever seen (id → label), fed from catalog loads.
     /// The chip's fallback while a harness's list is still loading — a
     /// session whose configured model differs from the remembered pick
@@ -185,6 +189,11 @@ mod tests {
             "Fable 5".into(),
         );
         defaults.remember_model(HarnessId::Codex, "gpt-5.2-codex".into(), "GPT-5.2".into());
+        defaults
+            .model_options_by_harness
+            .entry(HarnessId::ClaudeCode)
+            .or_default()
+            .insert("contextWindow".into(), "1m".into());
         defaults.save(dir.path()).unwrap();
         let loaded = ComposerDefaults::load(dir.path());
         assert_eq!(loaded, defaults);
