@@ -19,6 +19,9 @@ use zeron_proto::{HarnessId, ReasoningLevel};
 
 const FILE_NAME: &str = "composer-defaults.json";
 
+/// Model option picks: option id → choice id (the `ChatConfig` shape).
+pub type ModelOptions = serde_json::Map<String, serde_json::Value>;
+
 /// Remembered model per harness — id plus display label, mirroring zeron's
 /// `modelByHarness` storing the full `Model` object "so the pill never flashes
 /// a raw id or 'Default'".
@@ -48,8 +51,10 @@ pub struct ComposerDefaults {
     /// Last reasoning level picked (global, like zeron's `reasoning` key).
     pub reasoning: Option<ReasoningLevel>,
     /// Last non-default model option picks (option id → choice id), per
-    /// harness — option ids ("contextWindow", "fastMode") are harness-scoped.
-    pub model_options_by_harness: HashMap<HarnessId, serde_json::Map<String, serde_json::Value>>,
+    /// harness and model id. Model-scoped because each pick was validated
+    /// against that model's catalog row, so it stays safe to send before the
+    /// catalog reloads (the Claude harness appends `[1m]` to any model id).
+    pub model_options_by_model: HashMap<HarnessId, HashMap<String, ModelOptions>>,
     /// Every model label ever seen (id → label), fed from catalog loads.
     /// The chip's fallback while a harness's list is still loading — a
     /// session whose configured model differs from the remembered pick
@@ -124,6 +129,20 @@ impl ComposerDefaults {
             .insert(harness, RememberedModel { id, label });
     }
 
+    /// The remembered option picks for one model, if any.
+    pub fn model_options_for(&self, harness: HarnessId, model: &str) -> Option<&ModelOptions> {
+        self.model_options_by_model.get(&harness)?.get(model)
+    }
+
+    /// Mutable option picks for one model, created empty on first use.
+    pub fn model_options_mut(&mut self, harness: HarnessId, model: &str) -> &mut ModelOptions {
+        self.model_options_by_model
+            .entry(harness)
+            .or_default()
+            .entry(model.to_string())
+            .or_default()
+    }
+
     /// The cached display label for a model id, if ever seen.
     pub fn label_for(&self, id: &str) -> Option<&str> {
         self.model_labels.get(id).map(String::as_str)
@@ -190,9 +209,7 @@ mod tests {
         );
         defaults.remember_model(HarnessId::Codex, "gpt-5.2-codex".into(), "GPT-5.2".into());
         defaults
-            .model_options_by_harness
-            .entry(HarnessId::ClaudeCode)
-            .or_default()
+            .model_options_mut(HarnessId::ClaudeCode, "claude-fable-5")
             .insert("contextWindow".into(), "1m".into());
         defaults.save(dir.path()).unwrap();
         let loaded = ComposerDefaults::load(dir.path());

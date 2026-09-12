@@ -776,8 +776,8 @@ impl Pickers {
     }
 
     /// The explicit (non-default) option picks: the chat's persisted
-    /// selections for existing chats, the remembered per-harness picks for
-    /// the new-chat canvas.
+    /// selections for existing chats, the remembered picks for the model the
+    /// new-chat canvas resolves to (same id [`Self::resolved`] sends).
     fn explicit_options(&self, cx: &App) -> serde_json::Map<String, serde_json::Value> {
         if let Some(chat) = self.state.read(cx).selected_chat_row() {
             return chat
@@ -789,16 +789,21 @@ impl Pickers {
         let Some(harness) = self.effective_harness(cx) else {
             return Default::default();
         };
-        let remembered = self
-            .defaults
-            .model_options_by_harness
-            .get(&harness)
-            .cloned()
-            .unwrap_or_default();
         match self.selected_model(cx) {
-            Some(model) => offered_options(model, remembered),
-            // Catalog not loaded yet: nothing to filter against.
-            None => remembered,
+            Some(model) => offered_options(
+                model,
+                self.defaults
+                    .model_options_for(harness, &model.id)
+                    .cloned()
+                    .unwrap_or_default(),
+            ),
+            // Catalog not loaded (or failed): the picks were validated for
+            // this exact model when made, so they are safe to send as-is.
+            None => self
+                .effective_model_id(cx)
+                .and_then(|id| self.defaults.model_options_for(harness, id))
+                .cloned()
+                .unwrap_or_default(),
         }
     }
 
@@ -1431,13 +1436,15 @@ impl Pickers {
                         .insert(option_id, serde_json::Value::String(choice_id));
                 }
             });
-        } else if let Some(harness) = self.effective_harness(cx) {
-            // New chat: the pick is the sticky per-harness memory itself.
-            let options = self
-                .defaults
-                .model_options_by_harness
-                .entry(harness)
-                .or_default();
+        } else if let Some(harness) = self.effective_harness(cx)
+            && let Some(model) = self
+                .selected_model(cx)
+                .filter(|m| m.options.iter().any(|o| o.id == option_id))
+                .map(|m| m.id.clone())
+        {
+            // New chat: the pick is the sticky memory for the catalog model
+            // that offered it — never stored unvalidated.
+            let options = self.defaults.model_options_mut(harness, &model);
             if default {
                 options.remove(&option_id);
             } else {
@@ -1491,6 +1498,16 @@ impl Pickers {
             }
             if !ladder.is_empty() {
                 config.reasoning = clamp_reasoning(config.reasoning, &ladder);
+            }
+            // Options likewise: a model switch must not carry picks the new
+            // model doesn't offer (e.g. a 1M context onto Haiku).
+            if let Some(model) = config
+                .model
+                .as_deref()
+                .and_then(|id| models.iter().find(|m| m.id == id))
+            {
+                config.model_options =
+                    offered_options(model, std::mem::take(&mut config.model_options));
             }
         }
         self.state.update(cx, |state, cx| {
@@ -4338,6 +4355,64 @@ mod tests {
             reasoning_levels: Vec::new(),
             options: Vec::new(),
         }
+    }
+
+    #[gpui::test]
+    fn remembered_options_stay_valid_for_the_sent_model_without_a_catalog(
+        cx: &mut gpui::TestAppContext,
+    ) {
+        let one_m = serde_json::Value::String("1m".into());
+        let mut opus = bare_model("opus", "Opus");
+        opus.options.push(ModelOption {
+            id: "contextWindow".into(),
+            label: "Context window".into(),
+            choices: ["200k", "1m"]
+                .map(|id| ModelOptionChoice {
+                    id: id.into(),
+                    label: id.into(),
+                })
+                .into(),
+            default_choice: "200k".into(),
+        });
+        let state = cx.new(|_| AppState::new());
+        let pickers = cx.new(|cx| Pickers::new(state, cx));
+        pickers.update(cx, |pickers, cx| {
+            pickers.defaults.harness = Some(HarnessId::ClaudeCode);
+            pickers.models.insert(
+                HarnessId::ClaudeCode,
+                Loadable::Ready(vec![opus.clone(), bare_model("haiku", "Haiku")]),
+            );
+            pickers.pick_model("opus".into(), cx);
+            pickers.pick_option("contextWindow".into(), "1m".into(), false, cx);
+            let resolved = pickers.resolved(cx);
+            assert_eq!(resolved.model.as_deref(), Some("opus"));
+            assert_eq!(resolved.model_options.get("contextWindow"), Some(&one_m));
+
+            pickers.pick_model("haiku".into(), cx);
+            assert!(pickers.resolved(cx).model_options.is_empty());
+
+            // Restart (draft cleared) and send before the catalog is usable.
+            for catalog in [
+                Loadable::Idle,
+                Loadable::Loading,
+                Loadable::Error("down".into()),
+            ] {
+                pickers.config = DraftConfig::default();
+                pickers.models.insert(HarnessId::ClaudeCode, catalog);
+                let resolved = pickers.resolved(cx);
+                assert_eq!(resolved.model.as_deref(), Some("haiku"));
+                assert!(
+                    resolved.model_options.is_empty(),
+                    "Opus's 1M pick must not ride along with Haiku"
+                );
+            }
+
+            // The Opus memory itself survives for when Opus is picked again.
+            pickers.pick_model("opus".into(), cx);
+            let resolved = pickers.resolved(cx);
+            assert_eq!(resolved.model.as_deref(), Some("opus"));
+            assert_eq!(resolved.model_options.get("contextWindow"), Some(&one_m));
+        });
     }
 
     fn descriptor(id: HarnessId, name: &str) -> HarnessDescriptor {
