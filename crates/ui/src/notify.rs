@@ -26,11 +26,11 @@
 
 const DISABLE_ENV: &str = "ZERON_DISABLE_NOTIFICATIONS";
 
-/// Post a desktop banner for `chat_id`'s session. Call from the main thread
+/// Post a desktop banner, optionally linked to `chat_id`'s session. Call from the main thread
 /// (the macOS native path talks to AppKit); slow paths (spawning a CLI) hop to
 /// a background thread. Silently a no-op when disabled or no notifier is
 /// available.
-pub fn post(title: &str, body: &str, chat_id: &str) {
+pub fn post(title: &str, body: &str, chat_id: Option<&str>) {
     if std::env::var_os(DISABLE_ENV).is_some() {
         return;
     }
@@ -48,7 +48,7 @@ pub fn on_click(handler: impl Fn(String) + 'static) {
 }
 
 #[cfg(target_os = "macos")]
-fn post_impl(title: &str, body: &str, chat_id: &str) {
+fn post_impl(title: &str, body: &str, chat_id: Option<&str>) {
     if post_user_notification(title, body, chat_id) {
         return;
     }
@@ -84,7 +84,7 @@ const CHAT_ID_KEY: &std::ffi::CStr = c"chatId";
 /// no bundle (dev runs — `defaultUserNotificationCenter` is nil there) and
 /// the installed-app identity can't be adopted either.
 #[cfg(target_os = "macos")]
-fn post_user_notification(title: &str, body: &str, chat_id: &str) -> bool {
+fn post_user_notification(title: &str, body: &str, chat_id: Option<&str>) -> bool {
     use objc::runtime::{Class, Object};
     use objc::{class, msg_send, sel, sel_impl};
     // Defensive lookup (not `class!`, which panics if the class is ever
@@ -95,7 +95,7 @@ fn post_user_notification(title: &str, body: &str, chat_id: &str) -> bool {
     let (Ok(title), Ok(body), Ok(chat_id)) = (
         std::ffi::CString::new(title.replace('\0', "")),
         std::ffi::CString::new(body.replace('\0', "")),
-        std::ffi::CString::new(chat_id),
+        chat_id.map(std::ffi::CString::new).transpose(),
     ) else {
         return false;
     };
@@ -116,7 +116,9 @@ fn post_user_notification(title: &str, body: &str, chat_id: &str) -> bool {
         let _: () = msg_send![note, setTitle: ns_title];
         let ns_body: *mut Object = msg_send![class!(NSString), stringWithUTF8String: body.as_ptr()];
         let _: () = msg_send![note, setInformativeText: ns_body];
-        tag_chat(note, &chat_id);
+        if let Some(chat_id) = chat_id {
+            tag_chat(note, &chat_id);
+        }
         let _: () = msg_send![center, deliverNotification: note];
         let _: () = msg_send![note, release];
     }
@@ -310,7 +312,7 @@ fn applescript_escape(text: &str) -> String {
 }
 
 #[cfg(target_os = "linux")]
-fn post_impl(title: &str, body: &str, _chat_id: &str) {
+fn post_impl(title: &str, body: &str, _chat_id: Option<&str>) {
     let (title, body) = (title.to_string(), body.to_string());
     std::thread::spawn(move || {
         // `--` ends option parsing: session titles are model-generated, so a
@@ -329,7 +331,7 @@ fn post_impl(title: &str, body: &str, _chat_id: &str) {
 }
 
 #[cfg(not(any(target_os = "macos", target_os = "linux")))]
-fn post_impl(_title: &str, _body: &str, _chat_id: &str) {}
+fn post_impl(_title: &str, _body: &str, _chat_id: Option<&str>) {}
 
 #[cfg(test)]
 mod tests {
